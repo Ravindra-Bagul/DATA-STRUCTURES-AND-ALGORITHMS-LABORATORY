@@ -1,2 +1,2 @@
 # DATA-STRUCTURES-AND-ALGORITHMS-LABORATORY
-DATA STRUCTURES AND ALGORITHMS LABORATORY Programs
+All Data Structures and Algorithm Laboratory Assignments of SPPU Second Year Computer Engineering Syllabus
