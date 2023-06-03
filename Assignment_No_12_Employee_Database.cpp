@@ -9,172 +9,377 @@ ASSIGNMENT NO. 12
 Company maintains employee information as employee ID, name, designation and salary. 
 Allow user to add, delete information of employee. Display information of particular employee. 
 If employee does not exist an appropriate message is displayed. If it is, then the system displays 
-the employee details. Use sequential file to maintain the data.
+the employee details. Use index sequential file to maintain the data.
 */
 
+#include<iomanip>
 #include<iostream>
 #include<fstream>
-#include<cstdio>
+#include<string.h>
+
 using namespace std;
 
-class Employee {
-	int employee_id;
-	char name[50];
-	char post[50];
-	float salary;
+class EMP_CLASS
+{
+        typedef struct EMPLOYEE
+        {
+            char name[10];
+            int emp_id;
+            int salary;
+            char desig[20];
+        }Rec;
 
-public:
-	void setData() 
-	{
-		cout << "\nEnter Employee ID : ";
-		cin >> employee_id;
-		cout << "Enter Name of Employee : ";
-		cin >> name;
-		cout << "Enter Post of Employee : ";
-		cin >> post;
-		cout << "Enter Salary of Employee : ";
-		cin >> salary;
-	}
+        typedef struct INDEX
+        {
+            int emp_id;
+            int position;
+        }Ind_Rec;
 
-	void showData() 
-	{
-		cout << endl;
-		cout << "\n\tEmployee ID     : " << employee_id;
-		cout << "\n\tEmployee Name   : " << name;
-		cout << "\n\tEmployee Post   : " << post;
-		cout << "\n\tEmployee Salary : " << salary;
-		cout << endl;
-	}
+        Rec Records;
+        Ind_Rec Ind_Records;
 
-	int retemployee_id() 
-	{
-		return employee_id;
-	}
+    public:
+        EMP_CLASS();
+        void Create();
+        void Display();
+        void Uptxte();
+        void Delete(); 
+        void Append();
+        void Search();
 };
 
-void write_record() {
-	ofstream outFile;
-	outFile.open("Employee.dat", ios::binary | ios::app);
-	Employee obj;
-	obj.setData();
-	outFile.write((char*) &obj, sizeof(obj));
-	outFile.close();
-}
-
-void display() {
-	ifstream inFile;
-	inFile.open("Employee.dat", ios::binary);
-	Employee obj;
-	while (inFile.read((char*) &obj, sizeof(obj))) {
-		obj.showData();
-	}
-	inFile.close();
-}
-
-void search(int n) {
-	ifstream inFile;
-	inFile.open("Employee.dat", ios::binary);
-	Employee obj;
-	while (inFile.read((char*) &obj, sizeof(obj))) {
-		if (obj.retemployee_id() == n) {
-			obj.showData();
-			break;
-		}
-	}
-	inFile.close();
-}
-
-void delete_record(int n) {
-	Employee obj;
-	ifstream inFile;
-	inFile.open("Employee.dat", ios::binary);
-	ofstream outFile;
-	outFile.open("temp.dat", ios::out | ios::binary);
-	while (inFile.read((char*) &obj, sizeof(obj))) {
-		if (obj.retemployee_id() != n) {
-			outFile.write((char*) &obj, sizeof(obj));
-		}
-	}
-
-	inFile.close();
-	outFile.close();
-	remove("Employee.dat");
-	rename("temp.dat", "Employee.dat");
-}
-
-void modify_record(int n) {
-	fstream file;
-	file.open("Employee.dat", ios::in | ios::out);
-	Employee obj;
-
-	while (file.read((char*) &obj, sizeof(obj))) {
-		if (obj.retemployee_id() == n) {
-			cout << "\nEnter the new details of Employee :";
-			obj.setData();
-			long int pos = -1 * sizeof(obj);
-			file.seekp(pos, ios::cur);
-			file.write((char*) &obj, sizeof(obj));
-		}
-	}
-	file.close();
-}
-
-int main() 
+EMP_CLASS::EMP_CLASS() //constructor
 {
-	int ch;
-	do 
-	{
-		cout << "\n******** Menu ********";
-		cout<<"\n  1.ADD Employee";
-		cout<<"\n  2.Display Employee";
-		cout<<"\n  3.Search Employee";
-		cout<<"\n  4.Delete Employee";
-		cout<<"\n  5.Modify Employee";
-		cout<<"\n  6.Exit";
-		cout << "\n\nEnter your choice : ";
-		cin >> ch;
-		
-		switch (ch) 
-		{
-			case 1:
-				cout << "\nEnter number of records : "; //Store 4 records in file
-				int n;
-				cin >> n;
-				for (int i = 0; i < n; i++)
-					write_record();
+    strcpy(Records.name,"");
+}
 
-				break;
+void EMP_CLASS::Create()
+{
+    int i;
+    char ch = 'y';
+    fstream seqfile;
+    fstream indexfile;
+    i=0;
 
-			case 2:
-				cout << "\nList of records : ";
-				display();
-				break;
+    indexfile.open("ind.txt", ios::in | ios::out | ios::binary);
+    seqfile.open("emp.txt", ios::in | ios::out | ios::binary);
 
-			case 3: //Search record
-				cout << "\nEnter Employee ID to be searched : ";
-				int s;
-				cin >> s;
-				search(s);
-				break;
+    do
+    {
+        cout << "\n Enter Name: "; 
+        cin >> Records.name;
+        cout << "\n Enter Emp ID: ";
+        cin >> Records.emp_id;
+        cout << "\n Enter Salary: ";
+        cin >> Records.salary;
+        cout<<"\n Enter Designation: ";
+        cin>> Records.desig;
 
-			case 4:
-				cout << "\nEnter Employee ID to be deleted : ";
-				int d;
-				cin >> d;
-				delete_record(d);
-				cout << "\nRecord Deleted !!";
-				break;
+        seqfile.write((char*)&Records, sizeof(Records)) << flush;
+        Ind_Records.emp_id = Records.emp_id;
+        Ind_Records.position = i;
 
-			case 5: //Modify record
-				cout << "\nEnter Employee ID to be modified : ";
-				int m;
-				cin >> m;
-				modify_record(m);
-				break;
+        indexfile.write((char*)&Ind_Records, sizeof(Ind_Records)) << flush;
+        cout << "\nDo you want to add more records?";
+        cin >> ch;
+    } while (ch=='y');
 
-			case 6:
-				cout<<"\nThanks for using this Program !!";
-				return 0;
-		}
-	} while (ch != 6);
+    seqfile.close(); 
+    indexfile.close();
+}
+
+void EMP_CLASS::Display()
+{
+    fstream seqfile;
+    fstream indexfile; 
+    int i;
+
+    seqfile.open("emp.txt", ios::in | ios::out | ios::binary);
+    indexfile.open("ind.txt", ios::in | ios::out | ios::binary); 
+    indexfile.seekg(0, ios::beg);
+    seqfile.seekg(0, ios::beg);
+
+    cout<<"\n The Contents of file are..." << endl;
+    i=0;
+
+    while (indexfile.read((char *)&Ind_Records, sizeof(Ind_Records)))
+    {
+        i = Ind_Records.position*sizeof(Rec); //getting pos from index file 
+        seqfile.seekg(i, ios::beg);  //seeking record of that pos from seq.file 
+        seqfile.read((char *)&Records, sizeof(Records));  //reading record 
+
+        if (Records.emp_id != -1)  //if rec, is not deleted logically
+        {   //then display it
+            cout << "\nName: " << Records.name;
+            cout << "\nEmp ID:"<< Records.emp_id;
+            cout<<"\nSalary:"<< Records.salary;
+            cout << "\nDesignation:"<<Records.desig;
+            cout << "\n";
+        }
+    }
+
+    seqfile.close(); 
+    indexfile.close();
+}
+
+void EMP_CLASS::Uptxte()
+{
+    int pos, id;
+    char New_name[10];
+    char New_desig[10];
+    int New_salary;
+
+    cout << "\n For uptxtion.";
+    cout << "\n Enter the Emp ID for for searching ";
+    cin >> id;
+
+    fstream seqfile;
+    fstream indexfile;
+
+    seqfile.open("emp.txt", ios::in | ios::out | ios::binary);
+    indexfile.open("ind.txt", ios::in | ios::out | ios::binary);
+    indexfile.seekg(0, ios::beg);
+    pos = -1;
+
+    //reading index file for getting the index 
+    while (indexfile.read((char *)&Ind_Records, sizeof(Ind_Records)))
+    {
+        if (id == Ind_Records.emp_id)//the desired record is found
+        {
+            pos = Ind_Records.position;//getting the position 
+            break;
+
+        }
+    }
+
+    if (pos == -1)
+    {
+        cout << "\n The record is not present in the file"; 
+        return;
+    }
+
+    else
+    {
+        cout << "\n Enter the values for uptxtion...";
+        cout << "\n Name:"; 
+        cin>> New_name; 
+        cout << "\n Salary: "; 
+        cin>> New_salary;
+        cout << "\n Designation: "; 
+        cin>> New_desig; //calculating the position of record in seq. file using the pos of ind. file 
+
+        int offset = pos*sizeof(Rec);
+        seqfile.seekp(offset);  //seeking the desired record for modification
+        strcpy(Records.name,New_name);//can be uptxted
+        Records.emp_id = id; //It's unique id,so don't change 
+        Records.salary = New_salary;//can be uptxted
+
+        seqfile.write((char*)&Records, sizeof(Records)) << flush; 
+        cout << "\n The record is uptxted!!!";
+    }
+    seqfile.close(); 
+    indexfile.close();
+}
+
+void EMP_CLASS::Delete()
+{
+    int id, pos;
+    cout<<"\n For deletion,";
+    cout << "\n Enter the Emp ID for for searching ";
+    cin >> id;
+    fstream seqfile;
+    fstream indexfile;
+
+    seqfile.open("emp.txt", ios::in | ios::out | ios::binary); 
+    indexfile.open("ind.txt", ios::in | ios::out | ios::binary);
+
+    seqfile.seekg(0, ios::beg); 
+    indexfile.seekg(0, ios::beg);
+
+    pos = -1;
+
+    //reading index file for getting the index
+
+    while (indexfile.read((char *)&Ind_Records, sizeof(Ind_Records)))
+    {
+        if (id == Ind_Records.emp_id) //desired record is found 
+        {
+            pos= Ind_Records.position; 
+            Ind_Records.emp_id = -1;
+            break;
+        }
+    }
+
+    if (pos == -1)
+    {
+        cout << "\n The record is not present in the file";
+        return;
+    }
+
+    //calculating the position of record in seq. file using the pos of index file 
+    int offset = pos*sizeof(Rec); 
+    seqfile.seekp(offset); //seeking the desired record for deletion
+
+    strcpy(Records.name,"");
+    Records.emp_id = -1; //logical deletion
+    Records.salary = -1; //logical deletion
+    strcpy(Records.desig,""); //logical deletion
+
+    seqfile.write((char*)&Records, sizeof(Records)) << flush;
+     //writing deleted status From index file also the desired record gets deleted as follows
+
+    offset = pos*sizeof(Ind_Rec); //getting position in index file
+    indexfile.seekp(offset); //seeking that record 
+    Ind_Records.emp_id = -1; //logical deletion of emp id
+    Ind_Records.position = pos;//position remain unchanged 
+    indexfile.write((char*)&Ind_Records, sizeof(Ind_Records)) << flush; 
+    seqfile.seekg(0);
+    indexfile.close();
+    seqfile.close(); 
+    cout<<"\n The record is Deleted!!!";
+
+}
+
+
+void EMP_CLASS::Append()
+{
+    fstream seqfile;
+    fstream indexfile;
+    int pos;
+
+    indexfile.open("ind.txt", ios::in | ios::binary); 
+    indexfile.seekg(0, ios::end);
+    pos = indexfile.tellg() /sizeof(Ind_Records);
+    indexfile.close();
+
+    indexfile.open("ind.txt", ios::app | ios::binary);
+
+    seqfile.open("emp.txt", ios::app | ios::binary);
+
+    cout<<"\n Enter the record for appending"; 
+    cout << "\nName: "; 
+    cin>> Records.name;
+    cout << "\nEmp_ID: "; 
+    cin>> Records.emp_id;
+    cout<<"\nSalary: "; 
+    cin>> Records.salary;
+    cout<<"\nDesignation: "; 
+    cin>> Records.desig; 
+
+    seqfile.write((char*)& Records, sizeof(Records)); //inserting rec at end in seq. file
+
+    Ind_Records.emp_id = Records.emp_id; //inserting rec at end in ind. file
+
+    Ind_Records.position = pos; //at calculated pos
+
+    indexfile.write((char*)&Ind_Records, sizeof(Ind_Records)) << flush;
+    seqfile.close();
+    indexfile.close();
+
+    cout<<"\n The record is Appended!!!";
+}
+
+void EMP_CLASS:: Search()
+{
+    fstream seqfile;
+    fstream indexfile;
+    int id, pos, offset;
+
+    cout << "\n Enter the Emp ID for searching the record";
+    cin >> id;
+    indexfile.open("ind.txt", ios::in | ios::binary);
+    pos = -1;
+
+    //reading index file to obtain the index of desired record
+
+    while (indexfile.read((char *)&Ind_Records, sizeof(Ind_Records)))
+    {
+        if (id == Ind_Records.emp_id)//desired record found
+        {
+            pos = Ind_Records.position;//seeking the position 
+            break;
+        }
+    }
+    if (pos== -1)
+    {
+        cout<<"\n Record is not present in the file";
+        return;
+    }
+    //calculate offset using position obtained from ind. file 
+    offset = pos*sizeof(Records); 
+    seqfile.open("emp.txt", ios::in | ios::binary); //seeking the record from seq. file using calculated offset 
+    seqfile.seekg(offset, ios::beg);//seeking for reading purpose 
+    seqfile.read((char *)&Records, sizeof(Records)); 
+    if (Records.emp_id == -1)
+    {
+    cout << "\n Record is not present in the file";
+    return;
+    }
+
+    else //emp_id=desired record's id
+    {
+    cout<<"\n The Record is present in the file and it is...";
+    cout<<"\n Name: "<< Records.name;
+    cout << "\n Emp ID: "<< Records.emp_id; 
+    cout<<"\n Salary: " << Records.salary;
+    cout << "\n Salary: " << Records.desig;
+
+    }
+
+    seqfile.close(); 
+    indexfile.close();
+    }
+
+int main()
+{
+    EMP_CLASS List;
+    char ans = 'y';
+    int choice;
+    do
+    {
+        cout <<"\nMain Menu"<< endl;
+        cout<<"\n 1.Create";
+        cout<<"\n 2.Display";
+        cout<<"\n 3.Uptxte";
+        cout<<"\n 4.Delete";
+        cout<<"\n 5.Append"; 
+        cout<<"\n 6.Search";
+        cout<<"\n 7 Exit";
+
+        cout << "\nEnter your choice: ";
+        cin >> choice; 
+        switch (choice)
+        {
+            case 1:
+                List.Create();
+                break;
+            case 2:
+                List.Display();
+                break;
+
+            case 3:
+                List.Uptxte();
+                break;
+
+            case 4:
+                List.Delete();
+                break;
+
+            case 5:
+                List.Append();
+                break;
+
+            case 6:
+                List.Search();
+                break;
+
+            case 7:
+                exit(0);
+        }
+        cout << "\n\t Do you want to go back to Main Menu?";
+        cin>> ans;
+
+    } while (ans == 'y');
+
+    return 0;
 }
